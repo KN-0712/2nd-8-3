@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Beauty Level Scanner</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      background:
+        radial-gradient(circle at top, rgba(46,204,113,0.15), transparent 30%),
+        linear-gradient(135deg, #090909, #111111 40%, #160b0f 100%);
+      color: #f5f5f5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 980px;
+      background: rgba(10, 10, 10, 0.92);
+      border: 1px solid rgba(46,204,113,0.15);
+      border-radius: 24px;
+      box-shadow: 0 0 30px rgba(46,204,113,0.12);
+      overflow: hidden;
+      backdrop-filter: blur(8px);
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 18px;
+      border-bottom: 1px solid rgba(46,204,113,0.18);
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .red { background: #ff4d6d; }
+    .yellow { background: #ffb703; }
+    .green { background: #70e000; }
+
+    .topbar-title {
+      margin-left: 8px;
+      font-size: 14px;
+      color: #d3d3d3;
+      letter-spacing: 0.6px;
+    }
+
+    .content {
+      padding: 28px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .panel {
+      background: rgba(46,204,113,0.15);
+      border: 1px solid rgba(46,204,113,0.16);
+      border-radius: 20px;
+      padding: 22px;
+    }
+
+    .small-label {
+      color: #7dffb3;
+      font-size: 15px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    p {
+        font-size: 20px;
+    }
+
+    h1 {
+      margin: 0 0 12px;
+      font-size: 38px;
+      line-height: 1.1;
+    }
+
+    .name {
+      color: #7dffb3;
+      text-shadow: 0 0 12px rgba(125, 255, 179, 0.35);
+    }
+
+    .desc {
+      color: #cfcfcf;
+      line-height: 1.7;
+      font-size: 16px;
+      margin-bottom: 18px;
+    }
+
+    .terminal {
+      background: #060606;
+      border-radius: 16px;
+      border: 1px solid rgba(46,204,113,0.15);
+      padding: 16px;
+      font-family: Consolas, monospace;
+      min-height: 220px;
+    }
+
+    .line {
+      margin: 10px 0;
+      color: #d9d9d9;
+      white-space: pre-wrap;
+    }
+
+    .scan-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .scan-ring {
+      width: 220px;
+      height: 220px;
+      margin: 8px auto 20px;
+      border-radius: 50%;
+      position: relative;
+      background:
+        radial-gradient(circle, rgba(46,204,113,0.15) 0%, rgba(46,204,113,0.02) 45%, transparent 70%);
+      border: 1px solid rgba(46,204,113,0.18);
+      box-shadow: inset 0 0 35px rgba(46,204,113,0.12), 0 0 25px rgba(46,204,113,0.09);
+    }
+
+    .scan-ring::before {
+      content: "";
+      position: absolute;
+      inset: 12px;
+      border-radius: 50%;
+      border: 1px dashed rgba(46,204,113,0.35);
+    }
+
+    .scan-ring::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: conic-gradient(
+        from 0deg,
+        transparent 0deg,
+        transparent 250deg,
+        rgba(46,204,113,0.8) 310deg,
+        rgba(46,204,113,0.15) 360deg
+      );
+      animation: rotate 3s linear infinite;
+      mask: radial-gradient(circle, transparent 58%, black 60%);
+      -webkit-mask: radial-gradient(circle, transparent 58%, black 60%);
+    }
+
+    .ring-text {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      text-align: center;
+      z-index: 2;
+    }
+
+    .ring-text .percent {
+      font-size: 42px;
+      font-weight: bold;
+      color: #2ecc71;
+      text-shadow: 0 0 14px rgba(46,204,113,0.35);
+    }
+
+    .ring-text .status {
+      margin-top: 8px;
+      font-size: 14px;
+      letter-spacing: 2px;
+      color: #d6d6d6;
+      text-transform: uppercase;
+    }
+
+    .bar-wrap {
+      margin: 14px 0;
+    }
+
+    .bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      color: #dddddd;
+      margin-bottom: 8px;
+    }
+
+    .bar {
+      width: 100%;
+      height: 11px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      overflow: hidden;
+    }
+
+    .fill {
+      height: 100%;
+      width: 0;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #2ecc71, #27ae60);
+      box-shadow: 0 0 14px rgba(46,204,113,0.35);
+      transition: width 1.2s ease;
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      margin-top: 24px;
+    }
+
+    .mini-card {
+      background: rgba(46,204,113,0.15);
+      border: 1px solid rgba(46,204,113,0.14);
+      border-radius: 18px;
+      padding: 18px;
+    }
+
+    .mini-card h3 {
+      margin: 0 0 12px;
+      color: #7dffb3;
+      font-size: 16px;
+    }
+
+    .mini-card p {
+      margin: 7px 0;
+      color: #dddddd;
+      line-height: 1.65;
+      font-size: 14px;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 26px;
+    }
+
+    button {
+      border: none;
+      border-radius: 14px;
+      padding: 12px 18px;
+      background: linear-gradient(135deg, #2ecc71, #27ae60);
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+      transition: 0.25s ease;
+      box-shadow: 0 0 18px rgba(46,204,113,0.18);
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 22px rgba(46,204,113,0.28);
+    }
+
+    .output {
+      margin-top: 18px;
+      background: #050505;
+      border: 1px dashed rgba(46,204,113,0.28);
+      border-radius: 18px;
+      padding: 18px;
+      min-height: 130px;
+      color: #f2f2f2;
+      line-height: 1.8;
+      white-space: pre-line;
+    }
+
+    .footer {
+      margin-top: 24px;
+      text-align: center;
+      color: #b5b5b5;
+      font-size: 13px;
+      opacity: 0.85;
+    }
+
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 860px) {
+      .hero {
+        grid-template-columns: 1fr;
+      }
+
+      .result-grid {
+        grid-template-columns: 1fr;
+      }
+
+      h1 {
+        font-size: 30px;
+      }
+    }
+
+    .photo-section{
+        margin-top: 50px;
+        margin-bottom: 50px;
+        text-align: center;
+    }
+
+    .photo-title{
+        margin: 6px 0 60px;
+        font-size: 24px;
+        color: #7dffb3;
+        letter-spacing: 1px;
+        text-shadow: 0 0 12px rgba(46,204,113,0.35);
+    }
+    .photo-gallery{
+        display:flex;
+        justify-content:center;
+        align-items:flex-end;
+        perspective:1400px;
+        margin-top:30px;
+    }
+
+    .photo-card{
+        width:150px;
+        height:230px;
+        margin-left:-40px; /* làm các ảnh sát lại */
+        border-radius:18px;
+        overflow:hidden;
+        position:relative;
+        cursor:pointer;
+
+        /* nghiêng sang phải + nghiêng sâu hơn */
+        transform:rotateY(45deg) rotateX(5deg);
+
+        transition:0.45s ease;
+        filter:brightness(0.7);
+        box-shadow:0 14px 28px rgba(0,0,0,0.35);
+    }
+
+    .photo-card:first-child{
+        margin-left:0;
+    }
+
+    .photo-card img{
+        width:100%;
+        height:100%;
+        object-fit:cover;
+        border-radius:18px;
+        border:2px solid rgba(125,255,179,0.3);
+    }
+
+    .photo-gallery:hover .photo-card{
+        opacity:0.4;
+    }
+
+    .photo-gallery .photo-card:hover{
+        transform:rotateY(0deg) rotateX(0deg) scale(1.3) translateY(-10px);
+        z-index:10;
+        opacity:1;
+        filter:brightness(1);
+    }
+
+    .bubble-input{
+      display:none;
+      margin-top:20px;
+      text-align:center;
+    }
+
+    .bubble-input.show{
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .bubble-input input{
+      width:260px;
+      padding:10px 14px;
+      border-radius:10px;
+      border:1px solid rgba(125,255,179,0.3);
+      background:#060606;
+      color:#fff;
+      outline:none;
+    }
+
+    .floating-tag{
+      position:fixed;
+      bottom:-80px;
+
+      padding:10px 16px;
+      border-radius:10px;
+
+      background:rgba(46,204,113,0.18);
+      border:1px solid rgba(125,255,179,0.4);
+
+      color:#eafff2;
+      font-size:16px;
+      font-family:Consolas, monospace;
+
+      box-shadow:0 0 14px rgba(46,204,113,0.25);
+
+      animation:tagFloat 12s linear forwards;
+
+      pointer-events:none;
+      z-index:999;
+    }
+
+    @keyframes tagFloat{
+
+      0%{
+        transform:translateY(0);
+        opacity:0;
+      }
+
+      5%{
+        opacity:1;
+      }
+
+      100%{
+        transform:translateY(-120vh);
+        opacity:1;
+      }
+
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="dot red"></div>
+      <div class="dot yellow"></div>
+      <div class="dot green"></div>
+      <div class="topbar-title">personal-scanner.exe / Special Gift</div>
+    </div>
+
+    <div class="content">
+      <div class="hero">
+        <div class="panel">
+          <div class="small-label">Classified Report</div>
+          <h1>Scanning: <span class="name">KIMNIE</span></h1>
+          <div class="desc">
+            This system analyzes through the eyes of its creator.
+            It was made for one person only.
+          </div>
+          <div class="terminal" id="terminalBox"></div>
+        </div>
+
+        <div class="panel scan-card">
+          <div class="scan-ring">
+            <div class="ring-text">
+              <div class="percent" id="beautyPercent">0%</div>
+              <div class="status">Beauty Level</div>
+            </div>
+          </div>
+
+          <div class="bar-wrap">
+            <div class="bar-label">
+              <span>Beauty</span>
+              <span id="beautyValue">0%</span>
+            </div>
+            <div class="bar"><div class="fill" id="beautyBar"></div></div>
+          </div>
+
+          <div class="bar-wrap">
+            <div class="bar-label">
+              <span>Confidence</span>
+              <span id="confidenceValue">0%</span>
+            </div>
+            <div class="bar"><div class="fill" id="confidenceBar"></div></div>
+          </div>
+
+          <div class="bar-wrap">
+            <div class="bar-label">
+              <span>Charm</span>
+              <span id="charmValue">0%</span>
+            </div>
+            <div class="bar"><div class="fill" id="charmBar"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="result-grid">
+        <div class="mini-card">
+          <h3>Visual Scan</h3>
+          <p>• pretty eyes</p>
+          <p>• soft lips</p>
+          <p>• sweet voice</p>
+          <p>• good figure</p>
+        </div>
+
+        <div class="mini-card">
+          <h3>Personality Scan</h3>
+          <p>• capable: ✓</p>
+          <p>• sweet: ✓</p>
+          <p>• interesting: ✓</p>
+          <p>• funny: ✓</p>
+          <p>• innocent: ✓</p>
+          <p>• sexy: ✓</p>
+          <p>• special: ✓</p>
+          <p>• my type: ✓</p>
+          <p>• ALL IN: ✓</p>
+        </div>
+
+        <div class="mini-card">
+          <h3>Note</h3>
+          <p>• Cổ là số 1, cố là giải đặc biệt, cần được công khai um sùm vào </p>
+          <p>• Dễ nóng tính những dễ nguôi, chỉ cần nhõng nhẽo, nói chuyện nhẹ nhàng là cổ hết giận</p>
+          <p>• Cổ đề cao sự trung thực, hong thích bị nói dối</p>
+        </div>
+      </div>
+
+      <div class="photo-section">
+        <h2 class="photo-title">PERSONAL ARCHIVE</h2>
+        <div class="photo-gallery">
+            <div class="photo-card"><img src="Chiiu.jpg" alt="img1"></div>
+            <div class="photo-card"><img src="Chiiu1.jpg" alt="img2"></div>
+            <div class="photo-card"><img src="Chiiu2.jpg" alt="img3"></div>
+            <div class="photo-card"><img src="Chiiu3.jpg" alt="img4"></div>
+            <div class="photo-card"><img src="Chiiu5.jpg" alt="img5"></div>
+            <div class="photo-card"><img src="Chiiu6.jpg" alt="img6"></div>
+            <div class="photo-card"><img src="Chiiu7.jpg" alt="img7"></div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button onclick="showMessage('verdict')">Conclusion</button>
+        <button onclick="showMessage('sendtoher')">Something wanna tell u</button>
+        <button onclick="toggleSpecialInput()">Something Special</button>
+      </div>
+
+      <div class="bubble-input" id="bubbleInputBox">
+        <input type="text" id="bubbleText" placeholder="Type something..." />
+        <button onclick="launchTags()">Start</button>
+      </div>
+
+      <div class="output" id="outputBox">
+        Bấm một nút để hiển thị kết quả phân tích cuối cùng.
+      </div>
+
+      <div class="footer">
+        Built for the one and only unforgettable girl.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const terminalLines = [
+      "> initializing beauty scanner...",
+      "> loading visual profile...",
+      "> detecting visual aura... completed",
+      "> analyzing beauty metrics... extremely high",
+      "> measuring confidence and charm... stable",
+      "> analysis completed"
+    ];
+
+    const terminalBox = document.getElementById("terminalBox");
+    let lineIndex = 0;
+
+    function typeTerminalLines() {
+      if (lineIndex < terminalLines.length) {
+        const div = document.createElement("div");
+        div.className = "line";
+        div.textContent = terminalLines[lineIndex];
+        terminalBox.appendChild(div);
+        lineIndex++;
+        setTimeout(typeTerminalLines, 500);
+      }
+    }
+
+    const stats = {
+      beautyLevel: 98,
+      beauty: 98,
+      confidence: 95,
+      charm: 99
+    };
+
+    const outputs = {
+      verdict: `FINAL VERDICT
+      Analysis complete.
+      Conclusion: Among all beautiful things, she is the one that stands out the most. `,
+
+      sendtoher: `VIẾT CHO CHỊ NGÂN
+      Phần này em xin được phép viết bằng Tiếng Việt nhe.
+      Mặc dù nay là 8/3 nhưng em mong lời chúc này của em không chỉ dừng lại ở ngày 8/3, em muốn chúc chị mỗi ngày đều như thế.
+      Em chúc chị Ngân mỗi ngày đều vui vẻ và hạnh phúc, ngày càng xinh hơn, tự tin hơn, yêu đời hơn và cả yêu em nữa.
+      Mong là mọi thứ tốt đẹp sẽ đến và nói với chị rằng là chị đã rất giỏi ùi, vì chị Ngân xứng đáng mà nhỉ.
+      Nên là chị Ngân đừng có nghĩ nhiều hay lo lắng hay tự áp lực mình nhe, để dành thời gian đó để chăm lo cho bản thân này, tận hưởng sự nuông chiều của em nữa.
+      Em chỉ muốn chị Ngân biết là dù sao đi nữa thì chị Ngân cũng có em, nếu hong có ai tin chị, hong có ai hiểu chị thì có em, ý là chị sẽ không phải một mình với mọi thứ, cũng hong cần tự gồng mình để theo ý một ai hết, em sẽ luôn ủng hộ chị làm những gì chị thích.
+      Chỉ cần chị Ngân muốn, em sẽ làm được cho chị Ngân. Nghe câu này ngầu ha, mà em chưa làm được cái gì ứng với câu này í, mới nói miệng thui à, nên là chị Ngân nhớ giúp em thực hiện câu này nhe, một ngày một mong muốn cũm được ạaa.
+      Nói chung là nhiều thế thui chứ ý chính của em là EM YÊU CHỊ, LUÔN YÊU CHỊ
+      I LOVE YOU, ALWAYS LOVE YOU`
+    };
+
+    function animateValue(id, endValue, suffix = "%", duration = 1200) {
+      const el = document.getElementById(id);
+      let start = 0;
+      const stepTime = Math.max(10, Math.floor(duration / endValue));
+      const timer = setInterval(() => {
+        start++;
+        el.textContent = start + suffix;
+        if (start >= endValue) {
+          clearInterval(timer);
+        }
+      }, stepTime);
+    }
+
+    function setBar(id, value) {
+      document.getElementById(id).style.width = value + "%";
+    }
+
+    function showMessage(type) {
+      const output = document.getElementById("outputBox");
+      const inputBox = document.getElementById("bubbleInputBox");
+      // hiện lại khung kết quả
+      output.style.display = "block";
+      // ẩn input
+      inputBox.classList.remove("show");
+      output.textContent = outputs[type];
+    }
+
+    window.onload = () => {
+      typeTerminalLines();
+      animateValue("beautyPercent", stats.beautyLevel);
+      animateValue("beautyValue", stats.beauty);
+      animateValue("confidenceValue", stats.confidence);
+      animateValue("charmValue", stats.charm);
+      setTimeout(() => setBar("beautyBar", stats.beauty), 250);
+      setTimeout(() => setBar("confidenceBar", stats.confidence), 450);
+      setTimeout(() => setBar("charmBar", stats.charm), 650);
+    };
+
+    function toggleSpecialInput(){
+      const box = document.getElementById("bubbleInputBox");
+      const input = document.getElementById("bubbleText");
+      const output = document.getElementById("outputBox");
+      // ẩn khung kết quả
+      output.style.display = "none";
+      // hiện ô nhập
+      box.classList.toggle("show");
+      if (box.classList.contains("show")) {
+        input.focus();
+      }
+    }
+
+    function launchTags(){
+      const input = document.getElementById("bubbleText");
+      const text = input.value.trim();
+      if(!text) return;
+      for(let i = 0; i < 30; i++){
+        setTimeout(() => {
+          const tag = document.createElement("div");
+          tag.className = "floating-tag";
+          tag.textContent = text;
+          tag.style.left = Math.random() * (window.innerWidth - 120) + "px";
+          tag.style.animationDuration = (3 + Math.random() * 2) + "s";
+          document.body.appendChild(tag);
+          setTimeout(() => {
+            tag.remove();
+          }, 12000);
+        }, i * 300); // delay mỗi chữ
+      }
+      input.value = "";
+    }
+  </script>
+</body>
+</html>
